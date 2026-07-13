@@ -1,14 +1,30 @@
-const { NodeSDK } = require('@opentelemetry/sdk-node');
-const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-const { Resource } = require('@opentelemetry/resources');
-const { ATTR_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');
 const env = require('../config/env');
 
 let sdk;
 
+// Requires dinâmicos (não literais) de propósito: em Lambda, OTEL_ENABLED
+// é 'false' por padrão (ver serverless.yml), então este bloco nunca chega a
+// rodar. Usar `require(variavel)` em vez de `require('pacote')` impede que o
+// esbuild resolva/empacote essas dependências (o auto-instrumentations-node
+// sozinho tem ~15 mil arquivos) no pacote de deploy da Lambda.
+const OTEL_PACKAGES = [
+  '@opentelemetry/sdk-node',
+  '@opentelemetry/exporter-trace-otlp-http',
+  '@opentelemetry/auto-instrumentations-node',
+  '@opentelemetry/resources',
+  '@opentelemetry/semantic-conventions',
+];
+
 function startTracing() {
   if (!env.otel.enabled || sdk) return;
+
+  const [
+    { NodeSDK },
+    { OTLPTraceExporter },
+    { getNodeAutoInstrumentations },
+    { Resource },
+    { ATTR_SERVICE_NAME },
+  ] = OTEL_PACKAGES.map((name) => require(name)); // eslint-disable-line global-require, import/no-dynamic-require
 
   sdk = new NodeSDK({
     resource: new Resource({ [ATTR_SERVICE_NAME]: env.otel.serviceName }),

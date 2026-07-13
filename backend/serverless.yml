@@ -39,14 +39,30 @@ functions:
       - httpApi: '*'
 
 plugins:
+  - serverless-esbuild
   - serverless-offline
 
-package:
-  patterns:
-    - '!tests/**'
-    - '!migrations/**'
-    - '!.env*'
-
 custom:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: false
+    platform: node
+    target: node20
+    exclude:
+      - aws-sdk
+    # Nunca resolvidos/empacotados pelo esbuild: pg-native é um binding nativo
+    # opcional do "pg" (nunca instalado, requerido dentro de um try/catch);
+    # swagger-ui-express e os pacotes @opentelemetry/* já são carregados via
+    # require dinâmico e só rodam fora do Lambda (ver src/app.js e
+    # src/telemetry/tracing.js) — não precisam existir no pacote de deploy.
+    external:
+      - pg-native
+      - swagger-ui-express
+      - '@opentelemetry/sdk-node'
+      - '@opentelemetry/exporter-trace-otlp-http'
+      - '@opentelemetry/auto-instrumentations-node'
+      - '@opentelemetry/resources'
+      - '@opentelemetry/semantic-conventions'
   serverless-offline:
     httpPort: 3000

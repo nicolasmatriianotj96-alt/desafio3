@@ -5,6 +5,17 @@ categorizadas com prioridade/status/prazo, colaboração entre usuários e
 relatórios agregados. Backend Node.js/Express + PostgreSQL pronto para rodar
 localmente ou como função AWS Lambda; frontend em Vue 3 + Tailwind CSS.
 
+## Demo publicado
+
+- **Aplicação (frontend, S3 static website)**: http://task-manager-desafio3-225065158311.s3-website-sa-east-1.amazonaws.com
+- **API (backend, AWS Lambda + API Gateway)**: https://lhz7s6kdbg.execute-api.sa-east-1.amazonaws.com
+  - Healthcheck: `/api/health` — spec OpenAPI: `/openapi.json`
+  - `/docs` (Swagger UI interativo) não é servido no Lambda de propósito — rode localmente ou via Docker para usá-lo (ver seções abaixo).
+
+> Esses recursos rodam numa conta AWS pessoal, dentro da faixa sempre-gratuita
+> para este volume de uso, e podem ser desativados a qualquer momento
+> (`npm run remove` no backend / exclusão do bucket S3).
+
 ## Sumário
 
 - [Arquitetura](#arquitetura)
@@ -20,6 +31,7 @@ localmente ou como função AWS Lambda; frontend em Vue 3 + Tailwind CSS.
 - [Observabilidade (OpenTelemetry + Jaeger)](#observabilidade-opentelemetry--jaeger)
 - [Rodando como AWS Lambda (serverless-offline)](#rodando-como-aws-lambda-serverless-offline)
 - [Deploy real na AWS](#deploy-real-na-aws)
+- [Deploy do frontend (S3)](#deploy-do-frontend-s3)
 - [Decisões de arquitetura e trade-offs](#decisões-de-arquitetura-e-trade-offs)
 
 ## Arquitetura
@@ -167,9 +179,13 @@ Os testes usam **Jest** e mockam a camada de acesso a dados (`pg`), então não
 
 ## Documentação da API (OpenAPI/Swagger)
 
-A especificação completa está em `backend/src/docs/openapi.yaml` e é servida
-interativamente em `/docs` (Swagger UI) sempre que a API está no ar — tanto
-localmente quanto na Lambda. O JSON bruto fica disponível em `/openapi.json`.
+A especificação completa está em `backend/src/docs/openapi.yaml` (fonte
+editável). O endpoint `/openapi.json` (spec em JSON, gerada a partir do YAML)
+fica disponível em qualquer ambiente, inclusive na Lambda. Já a UI interativa
+do Swagger (`/docs`) só é montada fora do Lambda (local ou Docker) — assim o
+pacote de deploy serverless não precisa carregar os assets estáticos do
+`swagger-ui-express`. Depois de editar o `openapi.yaml`, rode
+`npm run docs:build` para regenerar o `openapi.json`.
 
 ## Observabilidade (OpenTelemetry + Jaeger)
 
@@ -195,25 +211,75 @@ duplicada entre o modo servidor e o modo serverless.
 
 ## Deploy real na AWS
 
-Pré-requisitos: AWS CLI configurado (`aws configure`) com um usuário/role com
-permissão para criar Lambda, API Gateway, IAM roles e CloudWatch Logs; e uma
-`DATABASE_URL` de produção válida (o Postgres precisa ser acessível pela
-internet — Neon/Supabase já vêm assim).
+Pré-requisitos: um usuário/role IAM com permissão para criar Lambda, API
+Gateway, IAM roles, CloudFormation e CloudWatch Logs (não é obrigatório ter o
+AWS CLI instalado — o Serverless Framework só precisa das credenciais via
+variáveis de ambiente); e uma `DATABASE_URL` de produção acessível pela
+internet.
+
+O empacotamento usa **`serverless-esbuild`**, que faz *bundling* (tree-shaking)
+do código em vez de zipar o `node_modules` inteiro. Isso evita um problema real
+que apareceu durante o desenvolvimento: com o pacote "ingênuo" (zip de todo o
+`node_modules`, ~48 mil arquivos — incluindo devDependencies como Jest e o
+próprio Serverless Framework, e a árvore de auto-instrumentação do
+OpenTelemetry, sozinha com ~15 mil arquivos), o deploy falhava no Windows com
+`EMFILE: too many open files`. As dependências pesadas e opcionais
+(`@opentelemetry/*`, `swagger-ui-express`, `pg-native`) são carregadas via
+`require` dinâmico e só em tempo de execução fora do Lambda — então nem
+precisam existir no pacote de deploy (ver `custom.esbuild.external` em
+`serverless.yml`, `src/app.js` e `src/telemetry/tracing.js`).
 
 ```bash
 cd backend
 export DATABASE_URL="postgresql://..."
 export JWT_SECRET="$(openssl rand -hex 32)"
 export FRONTEND_URL="https://seu-frontend.exemplo.com"
+export AWS_ACCESS_KEY_ID="..."
+export AWS_SECRET_ACCESS_KEY="..."
 
 npm run deploy   # serverless deploy — cria os recursos na sua conta AWS
 ```
 
-Ao final, o Serverless Framework imprime a URL pública da API (API Gateway).
-Para desfazer o deploy e remover os recursos criados: `npm run remove`.
+Ao final, o Serverless Framework imprime a URL pública da API (API Gateway),
+por exemplo `https://xxxxxxxxxx.execute-api.sa-east-1.amazonaws.com`. Nessa URL,
+`/api/health`, `/openapi.json` e todos os endpoints `/api/*` funcionam
+normalmente; `/docs` (Swagger UI interativo) não é servido no Lambda — use-o
+localmente ou via Docker (ver seções acima). Para desfazer o deploy e remover
+os recursos criados: `npm run remove`.
 
-> **Atenção:** este comando cria recursos reais e cobráveis na sua conta AWS.
-> Rode-o apenas quando tiver revisado as variáveis de ambiente acima.
+> **Nota sobre Postgres IPv6-only:** se o seu provedor publicar só um endereço
+> IPv6 para a conexão "direta" (é o caso do Supabase), o Lambda (sem VPC) não
+> consegue alcançá-lo — use a connection string do **connection pooler**
+> (IPv4) do provedor, não a conexão direta.
+
+> **Atenção:** este comando cria recursos reais e cobráveis na sua conta AWS
+> (embora dentro da faixa sempre-gratuita para esse volume de uso). Rode-o
+> apenas quando tiver revisado as variáveis de ambiente acima, e considere
+> rodar `npm run remove` depois de validar o deploy.
+
+## Deploy do frontend (S3)
+
+O frontend é só HTML/CSS/JS estático (build do Vite), então também pode ser
+publicado de graça num bucket S3 com static website hosting, sem precisar de
+servidor:
+
+```bash
+cd frontend
+echo "VITE_API_URL=https://SEU-ENDPOINT.execute-api.SEU-REGIAO.amazonaws.com/api" > .env
+npm run build   # gera frontend/dist
+```
+
+Depois, crie um bucket S3 (nome globalmente único), desabilite o "Block Public
+Access", aplique uma bucket policy de leitura pública (`s3:GetObject` para
+`*`), habilite "Static website hosting" (index document `index.html`, error
+document também `index.html` — importante para o roteamento do Vue Router) e
+suba o conteúdo de `frontend/dist/` para o bucket. A URL final segue o formato
+`http://<bucket>.s3-website-<regiao>.amazonaws.com`.
+
+> Lembre-se de configurar `FRONTEND_URL` no backend (seção anterior) com essa
+> URL — ou deixe como `*` (usado neste demo) — e rodar `serverless deploy`
+> completo, já que o CORS do API Gateway é definido na infraestrutura e não é
+> atualizado por um `serverless deploy function`.
 
 ## Decisões de arquitetura e trade-offs
 

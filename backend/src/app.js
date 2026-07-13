@@ -1,9 +1,6 @@
-const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
 
 const env = require('./config/env');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
@@ -13,6 +10,10 @@ const usersRoutes = require('./modules/users/users.routes');
 const categoriesRoutes = require('./modules/categories/categories.routes');
 const tasksRoutes = require('./modules/tasks/tasks.routes');
 const reportsRoutes = require('./modules/reports/reports.routes');
+
+const openapiDocument = require('./docs/openapi.json');
+
+const isLambda = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
 
 const app = express();
 
@@ -24,9 +25,16 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-const openapiDocument = YAML.load(path.join(__dirname, 'docs', 'openapi.yaml'));
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
 app.get('/openapi.json', (req, res) => res.status(200).json(openapiDocument));
+
+// Swagger UI interativo só é montado fora do Lambda: evita empacotar os
+// assets estáticos do swagger-ui-express no pacote de deploy serverless.
+// O JSON da spec (acima) continua disponível em qualquer ambiente.
+if (!isLambda) {
+  // eslint-disable-next-line global-require
+  const swaggerUi = require('swagger-ui-express');
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
+}
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
