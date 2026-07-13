@@ -20,6 +20,11 @@ services:
       # o caso de hosts IPv6-only (ex.: conexão "direct" do Supabase) — nesse
       # caso use a connection string do "Connection Pooler" (IPv4), ver README.
       NODE_OPTIONS: --dns-result-order=ipv4first
+      # O container roda a API, não faz deploy — não precisa das credenciais
+      # AWS que também moram no backend/.env (usadas só pelo `serverless
+      # deploy` no host). Zeramos aqui para não vazá-las para dentro do container.
+      AWS_ACCESS_KEY_ID: ""
+      AWS_SECRET_ACCESS_KEY: ""
     ports:
       - "3000:3000"
     depends_on:

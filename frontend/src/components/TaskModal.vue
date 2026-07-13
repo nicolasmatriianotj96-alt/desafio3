@@ -102,7 +102,14 @@ async function handleRemoveCollaborator(userId) {
       <form class="space-y-4" @submit.prevent="handleSubmit">
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700">Título</label>
-          <input v-model="form.title" type="text" required maxlength="160" class="input" />
+          <input
+            v-model="form.title"
+            type="text"
+            required
+            maxlength="160"
+            class="input"
+            placeholder="Ex: Editar episódio 3 - temporada 2"
+          />
         </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700">Descrição</label>

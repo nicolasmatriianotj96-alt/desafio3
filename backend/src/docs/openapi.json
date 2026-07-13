@@ -821,7 +821,7 @@
           },
           "color": {
             "type": "string",
-            "example": "#6366f1"
+            "example": "#f97316"
           },
           "owner_id": {
             "type": "string",
@@ -846,7 +846,7 @@
           },
           "color": {
             "type": "string",
-            "example": "#6366f1"
+            "example": "#f97316"
           }
         }
       },

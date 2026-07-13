@@ -6,7 +6,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 const categoriesStore = useCategoriesStore();
 
 const name = ref('');
-const color = ref('#6366f1');
+const color = ref('#f97316');
 const editingId = ref(null);
 const error = ref('');
 const confirmingId = ref(null);
@@ -22,7 +22,7 @@ function startEdit(category) {
 function resetForm() {
   editingId.value = null;
   name.value = '';
-  color.value = '#6366f1';
+  color.value = '#f97316';
   error.value = '';
 }
 
@@ -55,7 +55,7 @@ async function handleDelete() {
       <form class="space-y-4" @submit.prevent="handleSubmit">
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700">Nome</label>
-          <input v-model="name" type="text" required class="input" placeholder="Ex: Trabalho" />
+          <input v-model="name" type="text" required class="input" placeholder="Ex: Roteiro" />
         </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700">Cor</label>

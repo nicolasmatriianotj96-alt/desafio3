@@ -4,12 +4,20 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Laranja/vermelho vívido — tom de streaming/mídia, no lugar do
+        // indigo corporativo original.
         brand: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          400: '#fb923c',
+          500: '#f97316',
+          600: '#ea580c',
+          700: '#c2410c',
+        },
+        accent: {
+          500: '#e11d48',
+          600: '#be123c',
         },
       },
     },

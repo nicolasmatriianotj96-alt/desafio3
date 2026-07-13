@@ -1,4 +1,5 @@
 jest.mock('../../src/modules/users/users.repository');
+jest.mock('../../src/modules/categories/categories.repository');
 
 const request = require('supertest');
 const usersRepository = require('../../src/modules/users/users.repository');

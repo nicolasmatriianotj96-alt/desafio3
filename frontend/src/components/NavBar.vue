@@ -15,7 +15,9 @@ function handleLogout() {
   <header class="border-b border-gray-200 bg-white">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
       <div class="flex items-center gap-6">
-        <span class="text-lg font-semibold text-brand-700">Task Manager</span>
+        <span class="bg-gradient-to-r from-brand-600 to-accent-500 bg-clip-text text-lg font-bold text-transparent">
+          Task Manager
+        </span>
         <nav class="flex gap-4 text-sm font-medium text-gray-600">
           <router-link to="/" class="hover:text-brand-600" active-class="text-brand-600">Tarefas</router-link>
           <router-link to="/categories" class="hover:text-brand-600" active-class="text-brand-600">Categorias</router-link>

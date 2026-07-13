@@ -155,10 +155,13 @@ npm install
 npm run dev             # http://localhost:5173
 ```
 
-Fluxo de uso: crie uma conta em **Cadastro**, faça login, crie categorias,
-crie tarefas (associando categoria/prioridade/prazo), adicione colaboradores
-por e-mail em uma tarefa (apenas o dono pode gerenciar colaboradores) e
-acompanhe o progresso em **Relatórios**.
+Fluxo de uso: crie uma conta em **Cadastro** (toda conta nova já vem com 5
+categorias padrão de um fluxo de produção de conteúdo — Roteiro, Gravação,
+Edição, Pós-produção, Publicação — como sugestão de uso, pensando no domínio
+de um cliente de streaming/mídia), faça login, crie tarefas (associando
+categoria/prioridade/prazo), adicione colaboradores por e-mail em uma tarefa
+(apenas o dono pode gerenciar colaboradores) e acompanhe o progresso em
+**Relatórios**.
 
 ## Testes
 
