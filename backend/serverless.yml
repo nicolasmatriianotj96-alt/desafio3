@@ -1,0 +1,52 @@
+service: task-manager-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'sa-east-1'}
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+  timeout: 15
+  httpApi:
+    cors:
+      allowedOrigins:
+        - ${env:FRONTEND_URL, '*'}
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+  environment:
+    NODE_ENV: production
+    DATABASE_URL: ${env:DATABASE_URL}
+    JWT_SECRET: ${env:JWT_SECRET}
+    JWT_EXPIRES_IN: ${env:JWT_EXPIRES_IN, '7d'}
+    FRONTEND_URL: ${env:FRONTEND_URL, '*'}
+    OTEL_ENABLED: ${env:OTEL_ENABLED, 'false'}
+    OTEL_SERVICE_NAME: ${env:OTEL_SERVICE_NAME, 'task-manager-api'}
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${env:OTEL_EXPORTER_OTLP_ENDPOINT, ''}
+
+functions:
+  api:
+    handler: src/lambda.handler
+    events:
+      - httpApi: '*'
+
+plugins:
+  - serverless-offline
+
+package:
+  patterns:
+    - '!tests/**'
+    - '!migrations/**'
+    - '!.env*'
+
+custom:
+  serverless-offline:
+    httpPort: 3000

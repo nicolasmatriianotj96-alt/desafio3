@@ -1,0 +1,26 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: task-manager-jaeger
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "4318:4318"   # OTLP HTTP receiver
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  api:
+    build:
+      context: ./backend
+    container_name: task-manager-api
+    env_file:
+      - ./backend/.env
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      # Prioriza IPv4 quando o host do Postgres publica A e AAAA. Não resolve
+      # o caso de hosts IPv6-only (ex.: conexão "direct" do Supabase) — nesse
+      # caso use a connection string do "Connection Pooler" (IPv4), ver README.
+      NODE_OPTIONS: --dns-result-order=ipv4first
+    ports:
+      - "3000:3000"
+    depends_on:
+      - jaeger
