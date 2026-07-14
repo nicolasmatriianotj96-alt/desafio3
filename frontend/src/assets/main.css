@@ -22,3 +22,31 @@
     @apply bg-white rounded-lg shadow-sm border border-gray-200;
   }
 }
+
+@layer utilities {
+  /* Fundo "aurora": gradiente vívido em movimento lento, usado nas telas de
+     login/cadastro. Usa as mesmas cores da marca (laranja/rosa/violeta/azul). */
+  .aurora-bg {
+    background: linear-gradient(120deg, #f97316, #db2777, #7c3aed, #0ea5e9, #f97316);
+    background-size: 300% 300%;
+    animation: aurora-shift 18s ease infinite;
+  }
+}
+
+@keyframes aurora-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-bg {
+    animation: none;
+  }
+}

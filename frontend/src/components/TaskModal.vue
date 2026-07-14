@@ -116,7 +116,7 @@ async function handleRemoveCollaborator(userId) {
           <textarea v-model="form.description" rows="3" maxlength="4000" class="input"></textarea>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Status</label>
             <select v-model="form.status" class="input">
@@ -135,7 +135,7 @@ async function handleRemoveCollaborator(userId) {
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Prazo</label>
             <input v-model="form.dueDate" type="date" class="input" />
@@ -164,9 +164,9 @@ async function handleRemoveCollaborator(userId) {
       <div v-if="task && task.is_owner" class="mt-6 border-t border-gray-100 pt-4">
         <h3 class="mb-2 text-sm font-semibold text-gray-900">Colaboradores</h3>
         <ul class="mb-3 space-y-1">
-          <li v-for="collaborator in task.collaborators" :key="collaborator.id" class="flex items-center justify-between text-sm">
-            <span class="text-gray-700">{{ collaborator.name }} ({{ collaborator.email }})</span>
-            <button class="text-red-600 hover:underline" @click="handleRemoveCollaborator(collaborator.id)">Remover</button>
+          <li v-for="collaborator in task.collaborators" :key="collaborator.id" class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-sm">
+            <span class="min-w-0 break-words text-gray-700">{{ collaborator.name }} ({{ collaborator.email }})</span>
+            <button class="shrink-0 text-red-600 hover:underline" @click="handleRemoveCollaborator(collaborator.id)">Remover</button>
           </li>
           <li v-if="!task.collaborators?.length" class="text-sm text-gray-500">Nenhum colaborador ainda.</li>
         </ul>

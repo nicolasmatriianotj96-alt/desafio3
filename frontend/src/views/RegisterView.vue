@@ -28,7 +28,10 @@ async function handleSubmit() {
 
 <template>
   <div class="mx-auto mt-16 max-w-sm">
-    <div class="card p-8">
+    <p class="mb-6 text-center text-3xl font-extrabold tracking-tight text-white drop-shadow-md">
+      Studio Flow
+    </p>
+    <div class="card p-8 shadow-xl">
       <h1 class="mb-1 text-xl font-semibold text-gray-900">Criar conta</h1>
       <p class="mb-6 text-sm text-gray-500">Comece a organizar suas tarefas em minutos.</p>
 

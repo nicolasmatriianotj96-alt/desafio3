@@ -64,14 +64,14 @@ async function applyFilters() {
       <button class="btn-primary" @click="openCreateModal">+ Nova tarefa</button>
     </div>
 
-    <div class="card mb-6 flex flex-wrap gap-4 p-4">
-      <select v-model="tasksStore.filters.status" class="input w-auto" @change="applyFilters">
+    <div class="card mb-6 flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap">
+      <select v-model="tasksStore.filters.status" class="input w-full sm:w-auto" @change="applyFilters">
         <option value="">Todos os status</option>
         <option value="pending">Pendente</option>
         <option value="in_progress">Em andamento</option>
         <option value="done">Concluída</option>
       </select>
-      <select v-model="tasksStore.filters.categoryId" class="input w-auto" @change="applyFilters">
+      <select v-model="tasksStore.filters.categoryId" class="input w-full sm:w-auto" @change="applyFilters">
         <option value="">Todas as categorias</option>
         <option v-for="category in categoriesStore.items" :key="category.id" :value="category.id">
           {{ category.name }}
@@ -81,10 +81,10 @@ async function applyFilters() {
         v-model="tasksStore.filters.search"
         type="search"
         placeholder="Buscar por título..."
-        class="input w-auto flex-1 min-w-[200px]"
+        class="input w-full sm:w-auto sm:min-w-[200px] sm:flex-1"
         @keyup.enter="applyFilters"
       />
-      <button class="btn-secondary" @click="applyFilters">Filtrar</button>
+      <button class="btn-secondary w-full sm:w-auto" @click="applyFilters">Filtrar</button>
     </div>
 
     <p v-if="tasksStore.loading" class="text-sm text-gray-500">Carregando tarefas...</p>
