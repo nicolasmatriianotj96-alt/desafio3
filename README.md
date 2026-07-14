@@ -192,30 +192,101 @@ pacote de deploy serverless não precisa carregar os assets estáticos do
 `swagger-ui-express`. Depois de editar o `openapi.yaml`, rode
 `npm run docs:build` para regenerar o `openapi.json`.
 
-Todas as rotas com **Auth = Sim** exigem o cabeçalho
+Todas as rotas marcadas **Auth** exigem o cabeçalho
 `Authorization: Bearer <token>`, obtido em `/auth/login` ou `/auth/register`.
 
-| Método | Rota | Auth | Descrição |
-|---|---|---|---|
-| POST | `/api/auth/register` | Não | Cria uma nova conta de usuário |
-| POST | `/api/auth/login` | Não | Autentica e retorna um token JWT |
-| GET | `/api/auth/me` | Sim | Dados do usuário autenticado |
-| GET | `/api/users/search` | Sim | Busca usuário por e-mail (para adicionar colaborador) |
-| GET | `/api/categories` | Sim | Lista as categorias do usuário |
-| POST | `/api/categories` | Sim | Cria uma categoria |
-| GET | `/api/categories/{id}` | Sim | Consulta uma categoria |
-| PUT | `/api/categories/{id}` | Sim | Atualiza uma categoria |
-| DELETE | `/api/categories/{id}` | Sim | Remove uma categoria |
-| GET | `/api/tasks` | Sim | Lista tarefas visíveis ao usuário (filtros `status`, `categoryId`, `search`) |
-| POST | `/api/tasks` | Sim | Cria uma tarefa |
-| GET | `/api/tasks/{id}` | Sim | Consulta uma tarefa |
-| PUT | `/api/tasks/{id}` | Sim | Atualiza uma tarefa (dono ou colaborador) |
-| DELETE | `/api/tasks/{id}` | Sim | Remove uma tarefa (somente o dono) |
-| POST | `/api/tasks/{id}/collaborators` | Sim | Adiciona colaborador pelo e-mail (somente o dono) |
-| DELETE | `/api/tasks/{id}/collaborators/{userId}` | Sim | Remove um colaborador (somente o dono) |
-| GET | `/api/reports/summary` | Sim | Resumo agregado: total, por status/prioridade, atrasadas, taxa de conclusão |
-| GET | `/api/reports/by-category` | Sim | Distribuição de tarefas por categoria |
-| GET | `/api/health` | Não | Healthcheck da API |
+Base: `/api` · versão `1.0.0` · formato `JSON`
+
+### Auth
+
+**POST `/auth/register`** — Cria uma nova conta de usuário
+
+```json
+// Request body
+{ "name": "Ana", "email": "ana@exemplo.com", "password": "senha123" }
+
+// Resposta 201
+{ "user": { "id": "...", "name": "...", "email": "...", "created_at": "..." }, "token": "..." }
+```
+
+**POST `/auth/login`** — Autentica e retorna um token JWT
+
+```json
+// Request body
+{ "email": "ana@exemplo.com", "password": "senha123" }
+
+// Resposta 200 / 401
+{ "user": { ... }, "token": "..." }  // ou 401 se credenciais inválidas
+```
+
+**GET `/auth/me`** `Auth` — Dados do usuário autenticado
+
+### Users
+
+**GET `/users/search?email=`** `Auth` — Busca usuários por e-mail (para adicionar colaborador)
+
+### Categories
+
+**GET `/categories`** `Auth` — Lista as categorias do usuário
+
+**POST `/categories`** `Auth` — Cria uma categoria
+
+```json
+// Request body
+{ "name": "Roteiro", "color": "#f97316" }
+```
+
+**GET `/categories/{id}`** `Auth` — Consulta uma categoria
+
+**PUT `/categories/{id}`** `Auth` — Atualiza uma categoria
+
+**DELETE `/categories/{id}`** `Auth` — Remove uma categoria
+
+### Tasks
+
+**GET `/tasks`** `Auth` — Lista tarefas visíveis ao usuário
+
+```
+// Query params (opcionais)
+status=pending|in_progress|done  categoryId=<uuid>  search=<texto>
+```
+
+**POST `/tasks`** `Auth` — Cria uma tarefa
+
+```json
+// Request body
+{ "title": "...", "description?": "...", "status?": "...", "priority?": "...", "dueDate?": "...", "categoryId?": "..." }
+```
+
+**GET `/tasks/{id}`** `Auth` — Consulta uma tarefa
+
+**PUT `/tasks/{id}`** `Auth` — Atualiza uma tarefa (dono ou colaborador)
+
+**DELETE `/tasks/{id}`** `Auth` — Remove uma tarefa (somente o dono)
+
+**POST `/tasks/{id}/collaborators`** `Auth` — Adiciona colaborador por e-mail (somente o dono)
+
+```json
+// Request body
+{ "email": "colaborador@exemplo.com" }
+```
+
+**DELETE `/tasks/{id}/collaborators/{userId}`** `Auth` — Remove um colaborador (somente o dono)
+
+### Reports
+
+**GET `/reports/summary`** `Auth` — Resumo agregado das tarefas
+
+```json
+// Resposta 200
+{ "total": 0, "byStatus": { ... }, "byPriority": { ... }, "overdue": 0, "completionRate": 0 }
+```
+
+**GET `/reports/by-category`** `Auth` — Distribuição de tarefas por categoria
+
+### Health
+
+**GET `/api/health`** — Healthcheck da API (sem autenticação)
 
 ## Observabilidade (OpenTelemetry + Jaeger)
 
