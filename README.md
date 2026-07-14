@@ -7,7 +7,8 @@ localmente ou como função AWS Lambda; frontend em Vue 3 + Tailwind CSS.
 
 ## Demo publicado
 
-- **Aplicação (frontend, S3 static website)**: http://task-manager-desafio3-225065158311.s3-website-sa-east-1.amazonaws.com
+- **Aplicação (frontend)**: https://d2mdqwrxr1861a.cloudfront.net
+  (servida via CloudFront, com HTTPS — o endpoint de site estático do S3 sozinho só serve HTTP, o que bloqueia o link em apps como WhatsApp e navegadores de celular)
 - **API (backend, AWS Lambda + API Gateway)**: https://lhz7s6kdbg.execute-api.sa-east-1.amazonaws.com
   - Healthcheck: `/api/health` — spec OpenAPI: `/openapi.json`
   - `/docs` (Swagger UI interativo) não é servido no Lambda de propósito — rode localmente ou via Docker para usá-lo (ver seções abaixo).
@@ -183,12 +184,38 @@ Os testes usam **Jest** e mockam a camada de acesso a dados (`pg`), então não
 ## Documentação da API (OpenAPI/Swagger)
 
 A especificação completa está em `backend/src/docs/openapi.yaml` (fonte
-editável). O endpoint `/openapi.json` (spec em JSON, gerada a partir do YAML)
-fica disponível em qualquer ambiente, inclusive na Lambda. Já a UI interativa
+editável, também copiada em `docs/openapi.yaml` para referência avulsa). O
+endpoint `/openapi.json` (spec em JSON, gerada a partir do YAML) fica
+disponível em qualquer ambiente, inclusive na Lambda. Já a UI interativa
 do Swagger (`/docs`) só é montada fora do Lambda (local ou Docker) — assim o
 pacote de deploy serverless não precisa carregar os assets estáticos do
 `swagger-ui-express`. Depois de editar o `openapi.yaml`, rode
 `npm run docs:build` para regenerar o `openapi.json`.
+
+Todas as rotas com **Auth = Sim** exigem o cabeçalho
+`Authorization: Bearer <token>`, obtido em `/auth/login` ou `/auth/register`.
+
+| Método | Rota | Auth | Descrição |
+|---|---|---|---|
+| POST | `/api/auth/register` | Não | Cria uma nova conta de usuário |
+| POST | `/api/auth/login` | Não | Autentica e retorna um token JWT |
+| GET | `/api/auth/me` | Sim | Dados do usuário autenticado |
+| GET | `/api/users/search` | Sim | Busca usuário por e-mail (para adicionar colaborador) |
+| GET | `/api/categories` | Sim | Lista as categorias do usuário |
+| POST | `/api/categories` | Sim | Cria uma categoria |
+| GET | `/api/categories/{id}` | Sim | Consulta uma categoria |
+| PUT | `/api/categories/{id}` | Sim | Atualiza uma categoria |
+| DELETE | `/api/categories/{id}` | Sim | Remove uma categoria |
+| GET | `/api/tasks` | Sim | Lista tarefas visíveis ao usuário (filtros `status`, `categoryId`, `search`) |
+| POST | `/api/tasks` | Sim | Cria uma tarefa |
+| GET | `/api/tasks/{id}` | Sim | Consulta uma tarefa |
+| PUT | `/api/tasks/{id}` | Sim | Atualiza uma tarefa (dono ou colaborador) |
+| DELETE | `/api/tasks/{id}` | Sim | Remove uma tarefa (somente o dono) |
+| POST | `/api/tasks/{id}/collaborators` | Sim | Adiciona colaborador pelo e-mail (somente o dono) |
+| DELETE | `/api/tasks/{id}/collaborators/{userId}` | Sim | Remove um colaborador (somente o dono) |
+| GET | `/api/reports/summary` | Sim | Resumo agregado: total, por status/prioridade, atrasadas, taxa de conclusão |
+| GET | `/api/reports/by-category` | Sim | Distribuição de tarefas por categoria |
+| GET | `/api/health` | Não | Healthcheck da API |
 
 ## Observabilidade (OpenTelemetry + Jaeger)
 
@@ -283,6 +310,16 @@ suba o conteúdo de `frontend/dist/` para o bucket. A URL final segue o formato
 > URL — ou deixe como `*` (usado neste demo) — e rodar `serverless deploy`
 > completo, já que o CORS do API Gateway é definido na infraestrutura e não é
 > atualizado por um `serverless deploy function`.
+
+> **Nota sobre HTTPS:** o endpoint de site estático do S3 (`s3-website-*`)
+> só serve HTTP — sem certificado, sem HTTPS. Isso faz o link ser recusado
+> por diversos aplicativos modernos (WhatsApp, navegadores de celular com
+> "sempre usar conexão segura"). A solução é colocar uma distribuição
+> **CloudFront** na frente do bucket (origem customizada apontando para o
+> endpoint de site estático, `ViewerProtocolPolicy: redirect-to-https`, e
+> `CustomErrorResponses` 403/404 → `index.html` com status 200, necessário
+> para o roteamento do Vue Router). O CloudFront oferece HTTPS de graça
+> (dentro da faixa gratuita) com um domínio `*.cloudfront.net`.
 
 ## Decisões de arquitetura e trade-offs
 
