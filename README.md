@@ -1,4 +1,4 @@
-# Task Manager — Desafio Técnico Fullstack Júnior
+# Studio Flow — Desafio Técnico Fullstack Júnior (Watch Brasil)
 
 Aplicação de gerenciamento de tarefas colaborativa: contas de usuário, tarefas
 categorizadas com prioridade/status/prazo, colaboração entre usuários e
