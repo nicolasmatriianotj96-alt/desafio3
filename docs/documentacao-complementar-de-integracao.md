@@ -115,6 +115,24 @@ A infraestrutura de produção é inteiramente gerenciada, sem servidores dedica
 - Cabeçalhos de segurança HTTP aplicados a todas as respostas (Helmet).
 - Validação estrita de todos os dados recebidos pela API.
 
+### 2.7 Configuração (variáveis de ambiente)
+
+O backend é configurado inteiramente por variáveis de ambiente, sem nenhum valor sensível fixo
+no código-fonte:
+
+| Variável | Finalidade |
+|---|---|
+| `DATABASE_URL` | Connection string do PostgreSQL |
+| `JWT_SECRET` / `JWT_EXPIRES_IN` | Chave de assinatura e validade do token de autenticação |
+| `PORT` | Porta do servidor local (padrão 3000) |
+| `FRONTEND_URL` | Origem permitida para CORS |
+| `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` | Ativação e destino do rastreamento (OpenTelemetry/Jaeger) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Só para o deploy — não lidas pela aplicação em si |
+
+O frontend usa uma única variável, `VITE_API_URL`, apontando para o endereço base da API. Em
+ambos, o caminho é copiar `.env.example` para `.env` e preencher os valores — o passo a passo
+completo está no [README.md](../README.md) da raiz.
+
 ## 3. Tecnologias e Programas Utilizados
 
 | Área | Ferramentas e tecnologias |
